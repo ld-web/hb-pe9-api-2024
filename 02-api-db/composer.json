@@ -1,0 +1,24 @@
+{
+  "name": "ld-web/hb-api-db",
+  "description": "Small API connected to database",
+  "authors": [
+    {
+      "name": "Lucas Delobelle",
+      "email": "lucas@ld-web.net"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "scripts": {
+    "start": "php -S localhost:8000"
+  },
+  "config": {
+    "process-timeout": 0
+  },
+  "require": {
+    "symfony/dotenv": "^7.1"
+  }
+}
