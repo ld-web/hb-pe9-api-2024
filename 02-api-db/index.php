@@ -1,5 +1,7 @@
 <?php
 
+use App\Request\RequestUri;
+
 header('Content-type: application/json; charset=UTF-8');
 
 set_exception_handler(function (Throwable $exception) {
@@ -20,7 +22,91 @@ use App\Db;
 
 $pdo = Db::getConnection();
 
-$stmt = $pdo->query("SELECT * FROM courses");
-$courses = $stmt->fetchAll();
+$uri = new RequestUri($_SERVER['REQUEST_URI']);
+$httpMethod = $_SERVER['REQUEST_METHOD'];
 
-echo json_encode($courses);
+// --- Liste des cours -------------------------------------------------------
+if ($uri->getOperationType() === RequestUri::OPERATION_COLLECTION && $uri->getResourceName() === 'courses' && $httpMethod === 'GET') {
+    $stmt = $pdo->query("SELECT * FROM courses");
+    $courses = $stmt->fetchAll();
+
+    echo json_encode($courses);
+    exit;
+}
+
+// --- Création d'un cours ---------------------------------------------------
+if ($uri->getOperationType() === RequestUri::OPERATION_COLLECTION && $uri->getResourceName() === 'courses' && $httpMethod === 'POST') {
+    $requestRawContent = file_get_contents('php://input');
+    $arrayContent = json_decode($requestRawContent, true);
+
+    $requiredFields = ['name', 'img', 'video', 'date'];
+    $errors = [];
+    foreach ($requiredFields as $requiredField) {
+        if  (!isset($arrayContent[$requiredField])) {
+            $errors[$requiredField] = "Le champ '$requiredField' est requis";
+        }
+    }
+
+    if (count($errors) > 0) {
+        http_response_code(422); // Unprocessable content
+        echo json_encode($errors);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO courses (course_name, cover_img_url, video_url, date_online) VALUES (:name, :img, :video, :date)");
+
+    $result = $stmt->execute([
+        'name' => $arrayContent['name'],
+        'img' => $arrayContent['img'],
+        'video' => $arrayContent['video'],
+        'date' => $arrayContent['date'],
+    ]);
+
+    if ($result === false) {
+        http_response_code(500); // Unprocessable content
+        echo json_encode([
+            'error' => "Une erreur est survenue lors de l'enregistrement du nouvel élément"
+        ]);
+        exit;
+    }
+
+    http_response_code(201); // Created
+
+    $id = $pdo->lastInsertId();
+
+    echo json_encode([
+        'uri' => 'course.php?id=' . $id,
+        'id_course' => $id,
+        'course_name' => $arrayContent['name'],
+        'cover_img_url' => $arrayContent['img'],
+        'video_url' => $arrayContent['video'],
+        'date_online' => $arrayContent['date'],
+    ]);
+    exit;
+}
+
+// --- Récupération d'un cours seul -----------------------------------
+if ($uri->getOperationType() === RequestUri::OPERATION_ITEM && $uri->getResourceName() === 'courses' && $httpMethod === 'GET') {
+    $id = $uri->getIdentifier();
+
+    $stmt = $pdo->prepare("SELECT * FROM courses WHERE id_course = :id");
+    $stmt->execute(['id' => $id]);
+
+    $course = $stmt->fetch();
+
+    if ($course === false) {
+        http_response_code(404); // Not Found
+        echo json_encode([
+            'error' => "Cours non trouvé"
+        ]);
+        exit;
+    }
+
+    $course = [
+        'uri' => '/courses/' . $id,
+        ...$course
+    ];
+
+    echo json_encode($course);
+    exit;
+}

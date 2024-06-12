@@ -37,7 +37,6 @@ if (count($errors) > 0) {
     exit;
 }
 
-
 $stmt = $pdo->prepare("INSERT INTO courses (course_name, cover_img_url, video_url, date_online) VALUES (:name, :img, :video, :date)");
 
 $result = $stmt->execute([
