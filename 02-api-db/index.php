@@ -2,6 +2,8 @@
 
 use App\Request\RequestUri;
 
+require_once __DIR__ . '/functions/course.php';
+
 header('Content-type: application/json; charset=UTF-8');
 
 set_exception_handler(function (Throwable $exception) {
