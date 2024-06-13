@@ -119,7 +119,7 @@ if ($uri->getOperationType() === RequestUri::OPERATION_ITEM &&
     if ($result === false) {
         http_response_code(500); // Internal Server Error
         echo json_encode([
-            'error' => "Une erreur est survenue lors de l'enregistrement du nouvel élément"
+            'error' => "Une erreur est survenue lors de la suppression de l'élément"
         ]);
         exit;
     }
