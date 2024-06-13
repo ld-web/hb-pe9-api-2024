@@ -28,8 +28,7 @@ $httpMethod = $_SERVER['REQUEST_METHOD'];
 
 // --- Liste des cours -------------------------------------------------------
 if ($uri->getOperationType() === RequestUri::OPERATION_COLLECTION && $uri->getResourceName() === 'courses' && $httpMethod === 'GET') {
-    $stmt = $pdo->query("SELECT * FROM courses");
-    $courses = $stmt->fetchAll();
+    $courses = findAllCourses();
 
     echo json_encode($courses);
     exit;
